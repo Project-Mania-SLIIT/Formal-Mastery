@@ -9,12 +9,13 @@ Original file is located at
 ## 1st Pipeline (informal to formal Wording) - Nouns
 """
 
-from fastapi import FastAPI, Request
+from flask import Flask, request, jsonify
 
-app = FastAPI()
+app = Flask(__name__)
 
-@app.post("/api")
-async def post_api(request: Request):
+
+@app.route('/api', methods=['POST'])
+def post_api():
             import csv
             import pandas as pd
             import sinling
@@ -92,7 +93,7 @@ async def post_api(request: Request):
             ## This is the Input Text of the model
             # input_paragraph = "ඔහේ බේගල් අද බලන් නැතිව ඉන්න හුගක් ඉස්කෝලයට යන්න."
                 # Get the request JSON body
-            data = await request.json()
+            data = request.get_json()
 
             # Process the request data
             # For example, you can access the 'name' field from the request body
@@ -808,14 +809,13 @@ async def post_api(request: Request):
             response = {'message': f'{modified_text}'}
 
             # Return the response as JSON
-            return {"result": modified_text}
+            return jsonify(response)
         
-@app.get("/")
-async def get_api(request: Request):
-    return {"message": "Your API is working perfectly. Now, you can use it for your project."}
+@app.route('/', methods=['GET'])
+def get_api():
+    return "Hello, World!"
         
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=5000)
+if __name__ == '__main__':
+    app.run(debug=True, port=5000)
         
 

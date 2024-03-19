@@ -21,6 +21,7 @@ def post_api():
             import sinling
             from sinling import SinhalaTokenizer, POSTagger, SinhalaStemmer
             from sinling import SinhalaTokenizer, POSTagger
+            from sinling import preprocess, word_joiner
             import csv
 
             def split_text_into_words(text):
@@ -355,8 +356,7 @@ def post_api():
                                 for other_noun_index in noun_indexes:
                                     if other_noun_index != noun_index and stemmer.stem(sentence_words[other_noun_index])[0] == row_column_word_3 :
                                         print("--")
-                                        updated_sentence = updated_sentence.replace(sentence_words[noun_index], row[replacement_column_index])
-
+                                        updated_sentence = updated_sentence.replace(sentence_words[noun_index], row[replacement_column_index] + str(stemmer.stem(sentence_words[noun_index])[1]))
                     return updated_sentence
 
             # document = 'එම ඔතන දදය තබන්න චිත්‍රයේ අහසේ ඉරක් අදින්න'

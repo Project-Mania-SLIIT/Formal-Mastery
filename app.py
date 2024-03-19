@@ -730,80 +730,88 @@ def post_api():
             print(last_letter_of_first_sentence)
             # Integrate inside the else block
             # Integrate inside the else block
+            modified_text = ""
             if last_letter_of_first_sentence == 'ද':
                 modified_text = update_sentence_verb
             else:
-                # Your integrated code here
-                # Function to stem all words
-                def stem_all_words(last_words):
-                    stemmer = SinhalaStemmer()
-                    stemmed_words = []
+                final_pos_tags = tokenize_document_and_return_POS_TAG(input_text)
+                tag_tuple = final_pos_tags[-1][-2]
+                if tag_tuple[1] == 'VFM':
+                            # Your integrated code here
+                            # Function to stem all words
+                            def stem_all_words(last_words):
+                                stemmer = SinhalaStemmer()
+                                stemmed_words = []
 
-                    for word in last_words:
-                        # Stem each word in the array
-                        stemmed_word = stemmer.stem(word)
-                        stemmed_words.append(stemmed_word)
+                                for word in last_words:
+                                    # Stem each word in the array
+                                    stemmed_word = stemmer.stem(word)
+                                    stemmed_words.append(stemmed_word)
 
-                    return stemmed_words
+                                return stemmed_words
 
-                # Example usage:
-                stemmed_words = stem_all_words(last_words)
+                            # Example usage:
+                            stemmed_words = stem_all_words(last_words)
 
-                # Print the original and stemmed words in the array
-                print("Original Verbs:")
-                print(last_words)
-                print("\nStemmed Verbs:")
-                print(stemmed_words)
+                            # Print the original and stemmed words in the array
+                            print("Original Verbs:")
+                            print(last_words)
+                            print("\nStemmed Verbs:")
+                            print(stemmed_words)
 
-                # Function to extract the first element from each tuple or take the word directly
-                def extract_first_element(stemmed_words):
-                    extracted_words = [word[0] if isinstance(word, tuple) else word for word in stemmed_words]
-                    return extracted_words
+                            # Function to extract the first element from each tuple or take the word directly
+                            def extract_first_element(stemmed_words):
+                                extracted_words = [word[0] if isinstance(word, tuple) else word for word in stemmed_words]
+                                return extracted_words
 
-                # Extract the first element from each tuple or take the word directly
-                extracted_words = extract_first_element(stemmed_words)
+                            # Extract the first element from each tuple or take the word directly
+                            extracted_words = extract_first_element(stemmed_words)
+                            print("Extracted Words:"+str(extracted_words))
 
-                for i in range(len(extracted_words)):
-                    if input_text.split('.')[i].split()[0] == 'නුඹලා' or input_text.split('.')[i].split()[0] == 'උබලා' or input_text.split('.')[i].split()[0] == 'ඔබලා':
-                        extracted_words[i] += 'හු'
-                        print("1")
-                    elif input_text.split('.')[i].split()[0] == 'ඔබ' or input_text.split('.')[i].split()[0] == 'උබ':
-                        extracted_words[i] += 'හි'
-                        print("2")
-                    elif input_text.split('.')[i].split()[0] == 'මම':
-                        extracted_words[i] += 'මි'
-                        print("3")
-                    elif input_text.split('.')[i].split()[0] == 'අපි':
-                        extracted_words[i] += 'මු'
-                        print("4")
-                    elif input_text.split('.')[i].split()[0] == 'ඔහු':
-                        extracted_words[i] += 'යි'
-                        print("5")
-                    else:
-                        first_word = english_input_text.split('.')[i].split()[0]
-                        if first_word[-2:] == 'na':
-                            extracted_words[i] += 'ති'
-                            print("6")
-                        elif first_word[-2:] == 'aa' or first_word[-1] == 'a' or first_word[-2:] == 'ee':
-                            extracted_words[i] += 'යි'
-                            print("7")
-                        elif first_word[-2:] == 'oo' or first_word[-1] == 'u' or first_word[-1] == 'n':
-                            extracted_words[i] += 'ති'
-                            print("8")
+                            for i in range(len(extracted_words)):
+                                if input_text.split('.')[i].split()[0] == 'නුඹලා' or input_text.split('.')[i].split()[0] == 'උබලා' or input_text.split('.')[i].split()[0] == 'ඔබලා':
+                                    extracted_words[i] += 'හු'
+                                    print("1")
+                                elif input_text.split('.')[i].split()[0] == 'ඔබ' or input_text.split('.')[i].split()[0] == 'උබ':
+                                    extracted_words[i] += 'හි'
+                                    print("2")
+                                elif input_text.split('.')[i].split()[0] == 'මම':
+                                    extracted_words[i] += 'මි'
+                                    print("3")
+                                elif input_text.split('.')[i].split()[0] == 'අපි':
+                                    extracted_words[i] += 'මු'
+                                    print("4")
+                                elif input_text.split('.')[i].split()[0] == 'ඔහු':
+                                    extracted_words[i] += 'යි'
+                                    print("5")
+                                else:
+                                    first_word = english_input_text.split('.')[i].split()[0]
+                                    if first_word[-2:] == 'na':
+                                        extracted_words[i] += 'ති'
+                                        print("6")
+                                    elif first_word[-2:] == 'aa' or first_word[-1] == 'a' or first_word[-2:] == 'ee':
+                                        extracted_words[i] += 'යි'
+                                        print("7")
+                                    elif first_word[-2:] == 'oo' or first_word[-1] == 'u' or first_word[-1] == 'n':
+                                        extracted_words[i] += 'ති'
+                                        print("8")
 
-                print("Modified Result:")
-                print(extracted_words)
+                            print("Modified Result:")
+                            print(extracted_words)
+                
+                            sentences = input_text.split('.')
+                            modified_sentences = []
+                            for i, sentence in enumerate(sentences):
+                                words = sentence.strip().split()
+                                if words:
+                                    last_word = words[-1].strip(".,!?")
+                                    words[-1] = extracted_words[i] if i < len(extracted_words) else last_word
+                                modified_sentences.append(' '.join(words))
 
-                sentences = input_text.split('.')
-                modified_sentences = []
-                for i, sentence in enumerate(sentences):
-                    words = sentence.strip().split()
-                    if words:
-                        last_word = words[-1].strip(".,!?")
-                        words[-1] = extracted_words[i] if i < len(extracted_words) else last_word
-                    modified_sentences.append(' '.join(words))
-
-                modified_text = '.'.join(modified_sentences)
+                            modified_text = '.'.join(modified_sentences)
+                else:
+                            modified_text = input_text
+    
 
             print("Original Text:")
             print(input_text)

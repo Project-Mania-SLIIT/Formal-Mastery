@@ -14,7 +14,7 @@ from flask import Flask, request, jsonify
 app = Flask(__name__)
 
 
-@app.route('/api', methods=['POST'])
+@app.route('/api/sinhala', methods=['POST'])
 def post_api():
             import csv
             import pandas as pd
@@ -814,6 +814,975 @@ def post_api():
 @app.route('/', methods=['GET'])
 def get_api():
     return "Hello, World!"
+
+@app.route('/api/tamil', methods=['POST'])
+def post_api_tamil():
+        import csv
+        import pandas as pd
+        import stanza
+        import logging
+        logging.getLogger('stanza').setLevel(logging.ERROR)
+
+        # Import the TamilStemmer module
+        import snowballstemmer
+        def extract_tamil_stems(paragraph):
+            stemmer = snowballstemmer.stemmer('tamil')
+
+            # Tokenize the paragraph into words
+            words = paragraph.split()
+
+            # Initialize arrays to store the first and second elements of each stemmed word
+            first_elements_array = []
+            second_elements_array = []
+
+            # Iterate through each word in the paragraph
+            for word in words:
+                # Stem the word
+                stemmed_word = stemmer.stemWord(word)
+
+                # Find the stem part and the suffix
+                stem_length = len(stemmer.stemWord(word))
+
+                # Check if the stem length is greater than 0
+                if stem_length > 0:
+                    stem_part = word[:stem_length]
+                    suffix = word[stem_length:]
+                else:
+                    stem_part = stemmed_word
+                    suffix = ""
+
+                # Append the first and second elements to their respective arrays
+                first_elements_array.append(stem_part)
+                second_elements_array.append(suffix)
+            return first_elements_array, second_elements_array
+
+        # # Example usage:
+        # input_paragraph = 'அவன் புதிதாக ஒரு போன் சாமன் பாய் வாங்கினான் .'
+        #
+        # first_elements, second_elements = extract_tamil_stems(input_paragraph)
+        #
+        # print("First Elements Array:")
+        # print(first_elements)
+        #
+        # print("\nSecond Elements Array:")
+        # print(second_elements)
+
+        def replace_informal_tamil(paragraph, csv_file_path):
+            # Read CSV file, excluding the first row
+            with open(csv_file_path, 'r', newline='', encoding='utf-8') as csv_file:
+                reader = csv.reader(csv_file)
+                header = next(reader)  # Skip the first row (header)
+                data = list(reader)
+
+            # Iterate through rows in the CSV file
+            for row in data:
+                # Check if the word in the first column exists in the paragraph
+                if row[0] in paragraph:
+                    # Replace the word with the corresponding value from the second column
+                    paragraph = paragraph.replace(row[0], row[1])
+
+            return paragraph
+
+        # # Example usage:
+        # csv_file_path = 'informaltamil.csv'
+        # input_paragraph = "அவன் புதிதாக ஒரு போன் சாமன் பாய் வாங்கினான்."
+        #
+        # updated_paragraph = replace_informal_tamil(input_paragraph, csv_file_path)
+        #
+        # print("Input Text")
+        # print(input_paragraph)
+        #
+        # print("Updated Paragraph:")
+        # print(updated_paragraph)
+
+        import csv
+
+        def split_text_into_words(text):
+            # Split the text into words
+            words = text.split()
+
+            # Return the array of words
+            return words
+
+        def extract_tamil_stems(words, stemmer):
+            first_elements_array = []
+            second_elements_array = []
+
+            for word in words:
+                # Stem each word
+                stemmed_word = stemmer.stemWord(word)
+
+                # Find the stem part and the suffix
+                stem_length = len(stemmer.stemWord(word))
+                stem_part = word[:stem_length]
+                suffix = word[stem_length:]
+
+                first_elements_array.append(stem_part)
+                second_elements_array.append(suffix)
+
+            return first_elements_array, second_elements_array
+
+        def replace_informal_words(paragraph, csv_file_path, stemmer):
+            # Split paragraph into words
+            words_array = split_text_into_words(paragraph)
+            print(words_array)
+
+            # Read CSV file, excluding the first row
+            with open(csv_file_path, 'r', newline='', encoding='utf-8') as csv_file:
+                reader = csv.reader(csv_file)
+                header = next(reader)  # Skip the first row (header)
+                data = list(reader)
+
+            # Iterate through rows in the CSV file
+            for row in data:
+                # Check if the word in the first column exists in the original words_array
+                if row[0] in words_array:
+                    # Replace the word with the corresponding value from the second column
+                    index = words_array.index(row[0])
+                    # updated_word = row[1] + extract_tamil_stems([words_array[index]], stemmer)[1][0]
+                    updated_word = row[1]
+                    words_array[index] = updated_word
+            #print(words_array)
+
+            # Extract first and second elements for each word in the updated words_array
+            first_elements_array, second_elements_array = extract_tamil_stems(words_array, stemmer)
+            print(first_elements_array)
+            print(second_elements_array)
+
+            # Iterate through rows in the CSV file for additional comparison
+            for row in data:
+                # Check if the word in the first column exists in the first_elements_array
+                if row[0] in first_elements_array:
+                    # Join the match word in the second column and concatenate with the corresponding second_elements_array word
+                    index = first_elements_array.index(row[0])
+                    # updated_word = row[1] + second_elements_array[index]
+                    updated_word = row[1] + second_elements_array[index]
+                    words_array[index] = updated_word
+
+            # print(updated_word)
+            # Concatenate the modified words back into a paragraph
+            updated_paragraph = ' '.join(words_array)
+
+            return updated_paragraph
+
+        """## First Run the Informal noun Csv Corpus"""
+
+        # Example usage:
+        csv_file_path = 'informal_tamil_nouns.csv'
+        input_paragraph = "நீ போனை உடைத்தேனா?"
+        
+        data = request.get_json()
+
+            # Process the request data
+            # For example, you can access the 'name' field from the request body
+        name = data.get('name')
+        input_paragraph = name
+
+        # Initialize the Stemmer For Tamil or use the appropriate stemmer
+        stemmer = snowballstemmer.stemmer('tamil')
+
+        updated_paragraph = replace_informal_words(input_paragraph, csv_file_path, stemmer)
+
+        print("Input Paragraph: ", input_paragraph)
+
+        ## First Output of the Pipeline
+        print("Updated Paragraph:")
+        print(updated_paragraph)
+
+        ## Second Run the Informal Verb Csv Corpus"""
+
+        # # Example usage:
+        # csv_file_path = 'informal_tamil_verbs.csv' #Provide informal Verb Csv
+        # # input_paragraph = "அவன் தாக புதிதாக ஒரு போன் சாமன் பாய் வாங்கினான்."
+        # input_paragraph_verb = updated_paragraph
+        #
+        # # Initialize the Stemmer For Tamil or use the appropriate stemmer
+        # stemmer = snowballstemmer.stemmer('tamil')
+        #
+        # updated_paragraph_verb = replace_informal_words(input_paragraph_verb, csv_file_path, stemmer)
+        #
+        # print("\n")
+        # print("Input Paragraph: ", input_paragraph_verb)
+        #
+        # ## First Output of the Pipeline
+        # print("Updated Paragraph:")
+        # print(updated_paragraph_verb)
+
+
+
+        """## 2nd Pipeline for the Work (Noun Only Replacement)"""
+
+        # Tokenize the document
+        def tokenize_document_and_return_POS_TAG(document):
+            # Initialize the stanza pipeline for Tamil
+            nlp = stanza.Pipeline(lang='ta', processors='tokenize,pos')
+
+            # Process the document
+            doc = nlp(document)
+
+            # Initialize an empty list to store (Word, POS Tag) pairs
+            pos_tags = []
+            # Iterate over the sentences and tokens to extract (Word, POS Tag) pairs
+            for sentence in doc.sentences:
+                sentence_pairs = [(word.text, word.pos) for word in sentence.words]
+                pos_tags.extend(sentence_pairs)
+
+            return pos_tags
+
+        # # Print the result
+        # document = 'கல்லூரி காலைவிழாவில் செதுக்குதல்  நான் கல்லு நடனம் ஆடினேன்'
+        # result = tokenize_document_and_return_POS_TAG(document)
+        #
+        # # Print the original and stemmed words in the array
+        # print("Tokenize Tags in document:")
+        # print(result)
+
+        def tamil_collect_nouns(document):
+            # Initialize the stanza pipeline for Tamil
+            nlp = stanza.Pipeline(lang='ta', processors='tokenize,pos')
+
+            # Process the document
+            doc = nlp(document)
+
+            # Initialize an empty list to store nouns
+            nouns = []
+
+            # Iterate over the sentences and tokens to extract nouns
+            for sentence in doc.sentences:
+                for word in sentence.words:
+                    # Check if the POS tag starts with 'NOU'
+                    if word.pos.startswith('NOU'):
+                        nouns.append(word.text)
+
+            return nouns
+
+        def get_noun_indexes(sentence):
+            # Initialize the stanza pipeline for Tamil
+            nlp = stanza.Pipeline(lang='ta', processors='tokenize,pos', use_gpu=False)
+            # Process the sentence
+            doc = nlp(sentence)
+            # Initialize an empty list to store indexes of nouns
+            noun_indexes = []
+
+            # Assuming there's only one sentence, hence doc.sentences[0]
+            # If there could be more, you'd need to adjust this logic
+            for index, word in enumerate(doc.sentences[0].words):
+                # Check if the POS tag starts with 'NOU' and add the index to the list
+                if word.pos.startswith('NOU'):
+                    noun_indexes.append(index)
+
+            return noun_indexes
+
+        #Noun indexes
+        # # Print the result
+        # document = 'கல்லூரி காலைவிழாவில் செதுக்குதல்  நான் கல்லு நடனம் ஆடினேன் .'
+        # Indexes = get_noun_indexes(document)
+        #
+        # # Print the original and stemmed words in the array
+        # print("Original Noun Index Positions:")
+        # print(Indexes)
+
+        def find_close_noun_pairs(noun_indexes):
+            pairs = []
+            for i in range(len(noun_indexes) - 1):
+                if noun_indexes[i + 1] - noun_indexes[i] == 1:  # Adjacent nouns
+                    pairs.append((noun_indexes[i], noun_indexes[i + 1]))
+            print(pairs)
+            return pairs
+
+        def find_replace(file_path, sentence):
+            with open(file_path, mode='r', encoding='utf-8') as csv_file:
+                csv_reader = csv.reader(csv_file)
+                header = next(csv_reader)  # Assuming the first row is a header
+
+                # Assuming the sentence is in the first column (index 0)
+                sentence_column_index_1 = 0  # First column in the CSV file
+                sentence_column_index_2 = 2  # Second column in the CSV file
+                replacement_column_index = 1  # Third column in the CSV file
+                
+
+                # Split the sentence into words
+                sentence_words = sentence.split()
+                
+
+                # Tokenize the document and return POS tags
+
+                pos_tags = tokenize_document_and_return_POS_TAG(sentence)
+                print(pos_tags)
+
+                # Find all noun indexes in the POS tags
+                noun_indexes = get_noun_indexes(sentence)
+                print(noun_indexes)
+
+                noun_words = tamil_collect_nouns(sentence)
+                print(noun_words)
+
+                # # Extract first and second parts of words in sentence_words[result]
+                # stemmer = SinhalaStemmer()
+                # noun_stems = []
+                #
+                # for word in noun_words:
+                #     # Stem each word in the array
+                #     stemmed_word = stemmer.stem(word)
+                #     noun_stems.append(stemmed_word)
+
+                # # Extract the first element of each tuple or take the word directly
+                # firstWord = [word[0] if isinstance(word, tuple) else word for word in noun_stems]
+                # secondWord = [word[1] if isinstance(word, tuple) else word for word in noun_stems]
+                #
+                # print(firstWord)
+                # print(secondWord)
+
+                updated_sentence = sentence
+                # List to store matching rows
+                matching_rows = []
+
+                # Iterate over the rows in the CSV file
+                for row in csv_reader:
+                    # Get the words from the CSV columns
+                    csv_column_word_1 = row[sentence_column_index_1]
+                    csv_column_word_2 = row[sentence_column_index_2]
+                    replacement_word = row[replacement_column_index]
+
+                    # Check if any word in firstWord list matches with the current row's word
+                    if any(word == csv_column_word_1 for word in noun_words):
+                        matching_rows.append(row)
+                print(matching_rows)
+
+            # Iterate over the matching rows
+                for row in matching_rows:
+                    # Get the first and third column words from the row
+                    row_column_word_1 = row[sentence_column_index_1]
+                    row_column_word_3 = row[sentence_column_index_2]
+
+                    # Compare each word in sentence_words with the row's first column word
+                    for noun_index in noun_indexes:
+                        # If the noun index word matches with the row's first column word
+                        if sentence_words[noun_index] == row_column_word_1:
+                            # Check if any other noun index word matches with the row's third column word
+                            print(sentence_words[noun_index])
+
+                            for other_noun_index in noun_indexes:
+                                if other_noun_index != noun_index and sentence_words[other_noun_index] == row_column_word_3:
+                                    # Replace the first column word match noun_index word with the second column word in matching rows
+                                    updated_sentence = updated_sentence.replace(sentence_words[noun_index], row[replacement_column_index])
+
+                        # elif stemmer.stem(sentence_words[noun_index])[0] == row_column_word_1:
+                        #     for other_noun_index in noun_indexes:
+                        #         if other_noun_index != noun_index and stemmer.stem(sentence_words[other_noun_index])[0] == row_column_word_3 :
+                        #             print("--")
+                        #             updated_sentence = updated_sentence.replace(sentence_words[noun_index], row[replacement_column_index])
+
+                return updated_sentence
+
+        #Put your update sentence in here as the Input (The output parameter as the document variable's input"
+        # document = 'கல்லூரி காலைவிழாவில் செதுக்குதல்  நான் கல்லு நடனம் ஆடினேன்'
+        # document_non = updated_paragraph_verb
+        document_non = updated_paragraph
+
+        csv_file_path = "tamil_wsd_nouns_only.csv"
+
+        Update_doc = find_replace(csv_file_path,document_non)
+        print("Original Text Sentence \n:",document_non)
+        print("Updated Sentence       \n:",Update_doc)
+
+
+
+        """## 3rd Pipeline for the Work (Noun Replacement)"""
+
+
+
+        import snowballstemmer
+        def get_stem_and_suffix(original_word):
+            stemmer = snowballstemmer.stemmer('tamil')
+
+            # Stem the Tamil word
+            stemmed_word = stemmer.stemWord(original_word)
+
+            # Find the stem part and the suffix
+            stem_length = len(stemmer.stemWord(original_word))
+            stem_part = original_word[:stem_length]
+            suffix = original_word[stem_length:]
+
+            return stem_part, suffix
+
+        def tokenize_document_and_return_POS_TAG(document):
+            # Initialize the stanza pipeline for Tamil
+            nlp = stanza.Pipeline(lang='ta', processors='tokenize,pos')
+            # Process the document
+            doc = nlp(document)
+            # Initialize an empty list to store (Word, POS Tag) pairs
+            pos_tags = []
+
+            # Iterate over the sentences and tokens to extract (Word, POS Tag) pairs
+            for sentence in doc.sentences:
+                sentence_pairs = [(word.text, word.pos) for word in sentence.words]
+                pos_tags.extend(sentence_pairs)
+            return pos_tags
+
+        # # Example usage
+        # tamil_document = "கல்லூரி காலைவிழாவில் செதுக்குதல்  நான் கல்லு நடனம் ஆடினேன்"
+        # result = tokenize_document_and_return_POS_TAG(tamil_document)
+        #
+        # # Print (Word, POS Tag) pairs
+        # for word, pos_tag in result:
+        #     print(f"Word: {word}, POS Tag: {pos_tag}")
+
+        def find_last_noun_before_target2(word_pos_list, target_index):
+            last_noun_index = None
+            current_index = 0
+
+            # Iterate over the word_pos_list to find the last noun before the target
+            for word, pos_tag in word_pos_list:
+                if current_index == target_index:
+                    break
+
+                # Check if the current word is a noun
+                if pos_tag.startswith('NOUN'):
+                    last_noun_index = current_index
+
+                current_index += 1
+
+            return last_noun_index
+
+        def find_replace_noun(file_path, sentence,index):
+            with open(file_path, mode='r', encoding='utf-8') as csv_file:
+                csv_reader = csv.reader(csv_file)
+                header = next(csv_reader)  # Assuming the first row is a header
+
+                # Assuming the sentence is in the first column (index 0)
+                sentence_column_index_1 = 0  # Second column in the CSV file
+                sentence_column_index_2 = 1  # Third column in the CSV file
+                replacement_column_index = 2  # Fourth column in the CSV file
+
+                updated_sentence = sentence
+                # Split the sentence into words
+                sentence_words = sentence.split()
+                pos_tags =tokenize_document_and_return_POS_TAG(sentence)
+                result = find_last_noun_before_target2(pos_tags, index)
+                print(sentence_words[result])
+
+                for row in csv_reader:
+                    # Get the words from the CSV columns
+                    csv_column_word_1 = row[sentence_column_index_1]
+                    csv_column_word_2 = row[sentence_column_index_2]
+                    replacement_word = row[replacement_column_index]
+
+                    stemmer = snowballstemmer.stemmer('tamil')
+                    stemmed_word = stemmer.stemWord(sentence_words[result])
+                    # stemmed_word = stemmer.stem(sentence_words[result])
+                    #print(sentence_words[result])
+
+                    stem_length = len(stemmer.stemWord(sentence_words[result]))
+                    first_element = sentence_words[result][:stem_length]
+                    second_element=sentence_words[result][stem_length:]
+
+                    updated_sentence=""
+                    # Check if the words from both columns are in the sentence
+
+                    if csv_column_word_1 == sentence_words[result] and csv_column_word_2 == sentence_words[index]:
+                        # print("first")
+                        # print(f"csv_column_word_1- {csv_column_word_1}")
+                        # print(f"sentence_words[result]- {sentence_words[result]}")
+                        # print(f"csv_column_word_2- {csv_column_word_2}")
+                        # print(f"sentence_words[index]- {sentence_words[index]}")
+                        updated_sentence = sentence.replace(csv_column_word_1, replacement_word)
+                        return updated_sentence
+                    elif csv_column_word_1 == first_element and csv_column_word_2 == sentence_words[index]:
+
+                        new_replacement_word=replacement_word+second_element
+                        #print(f"new_replacement_word- {new_replacement_word}")
+
+                        updated_sentence = sentence.replace(sentence_words[result], new_replacement_word)
+                        # print(f"sentence- {sentence}")
+                        # print(f"updated_sentence- {updated_sentence}")
+                        return updated_sentence
+                return sentence
+
+        def search_verb_index(file_path, sentence):
+            with open(file_path, mode='r', encoding='utf-8') as csv_file:
+                csv_reader = csv.reader(csv_file)
+                header = next(csv_reader)  # Assuming the first row is a header
+
+                # Assuming the sentence is in the first column (index 0)
+                sentence_column_index_1 = 0  # Second column in the CSV file
+                sentence_column_index_2 = 1  # Third column in the CSV file
+                replacement_column_index = 2  # Fourth column in the CSV file
+
+                # Split the sentence into words
+                sentence_words = sentence.split()
+                verb_index = set()
+
+                for row in csv_reader:
+                    # Get the words from the CSV columns
+                    csv_column_word_1 = row[sentence_column_index_1]
+                    csv_column_word_2 = row[sentence_column_index_2]
+                    replacement_word = row[replacement_column_index]
+
+                    if csv_column_word_2 in sentence_words:
+                        for index, word in enumerate(sentence_words):
+                            if((index-1)>=0):
+                                if(csv_column_word_2==word):
+                                    previous_noun = sentence_words[index-1]
+                                    # Add elements to the set
+                                    verb_index.add(index)
+
+                return verb_index
+
+        # Example usage
+        csv_file_path = 'tamil_wsd_nouns.csv'
+
+        ## For Search Sentence input provide last pipelines update sentence parameter
+        # search_sentence = 'கல்லூரி காலைவிழாவில் கல்லு கட செதுக்குதல் நான் நடனம் அடித்தல் .'
+        search_sentence_noun2 = Update_doc
+        verbindex=search_verb_index(csv_file_path, search_sentence_noun2)
+        print(verbindex)
+
+        pos_tags =tokenize_document_and_return_POS_TAG(search_sentence_noun2)
+        update_sentence_non=search_sentence_noun2
+        i=1
+        for element in verbindex:
+            print(f"{i}- iteration")
+            update_sentence_non=find_replace_noun(csv_file_path, update_sentence_non,element)
+            print(f"previous sentence {search_sentence_noun2}")
+            print(f"final sentence {update_sentence_non}")
+            i=i+1
+
+        print(f"final sentence {update_sentence_non}")
+
+
+
+        """## 4th Pipeline for the Work (Verb Replacement)"""
+
+
+
+        def tokenize_document_and_return_POS_TAG(document):
+            # Initialize the stanza pipeline for Tamil
+            nlp = stanza.Pipeline(lang='ta', processors='tokenize,pos')
+            # Process the document
+            doc = nlp(document)
+            # Initialize an empty list to store (Word, POS Tag) pairs
+            pos_tags = []
+
+            # Iterate over the sentences and tokens to extract (Word, POS Tag) pairs
+            for sentence in doc.sentences:
+                sentence_pairs = [(word.text, word.pos) for word in sentence.words]
+                pos_tags.extend(sentence_pairs)
+            return pos_tags
+
+        # To find the most closed previous noun for the verb
+        def find_next_verb_after_target2(word_pos_list, target_index):
+            next_verb_index = None
+
+            # Iterate over the word_pos_list to find the next verb after the target
+            for word_index, (word, pos_tag) in enumerate(word_pos_list):
+                if word_index > target_index and pos_tag.startswith('VERB'):
+                    next_verb_index = word_index
+                    break
+
+            return next_verb_index
+
+        #normal original words can be not in our db then the Stem words can be have then to check both here it convert to Stem list
+
+        def get_stem_and_suffix(original_word):
+            stemmer = snowballstemmer.stemmer('tamil')
+            # Stem the Tamil word
+            stemmed_word = stemmer.stemWord(original_word)
+
+            # Find the stem part
+            stem_length = len(stemmer.stemWord(original_word))
+            stem_part = original_word[:stem_length]
+
+            return stem_part
+
+        def get_stems_from_sentence(tamil_sentence):
+            # Split the Tamil sentence into words
+            words = tamil_sentence.split()
+
+            # Get the stem part for each word
+            stems = [get_stem_and_suffix(word) for word in words]
+
+            return stems
+
+        #We Are going to replace Immediate previous noun
+        def search_noun_index(file_path, sentence):
+            with open(file_path, mode='r', encoding='utf-8') as csv_file:
+                csv_reader = csv.reader(csv_file)
+                header = next(csv_reader)  # Assuming the first row is a header
+                # Assuming the sentence is in the first column (index 0)
+                sentence_column_index_1 = 0  # first column in the CSV file
+                sentence_column_index_2 = 1  # second column in the CSV file
+                replacement_column_index = 2  # third column in the CSV file
+
+                # Split the sentence into words
+                sentence_words = sentence.split()
+                stem_sentence_words=get_stems_from_sentence(sentence)
+                print(stem_sentence_words)
+                noun_index = set()
+                x=len(sentence_words)
+                for row in csv_reader:
+                    # Get the words from the CSV columns
+                    csv_column_word_1 = row[sentence_column_index_1]
+                    csv_column_word_2 = row[sentence_column_index_2]
+                    replacement_word = row[replacement_column_index]
+
+                    #check if original word have --
+                    if csv_column_word_2 in sentence_words:
+                        for index, word in enumerate(sentence_words):
+                            if((x-1)>index):
+                                if csv_column_word_2==word:
+                                    noun_index.add(index)
+                    #check if stem word have  --
+                    if csv_column_word_2 in stem_sentence_words:
+                        for index, word in enumerate(stem_sentence_words):
+                            if((x-1)>index):
+                                if csv_column_word_2==word:
+                                    noun_index.add(index)
+
+                return (noun_index)
+
+        csv_file_path = 'tamil_wsd_verbs.csv'
+        # search_sentence = 'கல்லூரி காலைவிழாவில் கல்லு கட செதுக்குதல் நான் நடனம் அடித்தல்'
+        # search_sentence ='கல்லூரி காலைவிழாவில் செதுக்குதல் நான் கல்லு நடனம் ஆடினேன்'
+
+        # search_sentence3 = update_sentence_new
+        # verbindex=search_noun_index(csv_file_path, search_sentence3)
+        # print(verbindex)
+
+        #here we are going to replace next verb
+        def find_replace_verb(file_path, sentence,index):
+            with open(file_path, mode='r', encoding='utf-8') as csv_file:
+                csv_reader = csv.reader(csv_file)
+                header = next(csv_reader)  # Assuming the first row is a header
+
+                # Assuming the sentence is in the first column (index 0)
+                sentence_column_index_1 = 0  # Second column in the CSV file
+                sentence_column_index_2 = 1  # Third column in the CSV file
+                replacement_column_index = 2  # Fourth column in the CSV file
+
+                updated_sentence = sentence
+
+                # Split the sentence into words
+                sentence_words = sentence.split()
+                pos_tags =tokenize_document_and_return_POS_TAG(sentence)
+                result = find_next_verb_after_target2(pos_tags, index)
+                print(sentence_words[result])
+                print(result)
+
+                for row in csv_reader:
+                    # Get the words from the CSV columns
+                    csv_column_word_1 = row[sentence_column_index_1]
+                    csv_column_word_2 = row[sentence_column_index_2]
+                    replacement_word = row[replacement_column_index]
+
+                    stemmer = snowballstemmer.stemmer('tamil')
+                    stemmed_word = stemmer.stemWord(sentence_words[result])
+                    # stemmed_word = stemmer.stem(sentence_words[result])
+                    #print(sentence_words[result])
+
+                    stem_length = len(stemmer.stemWord(sentence_words[result]))
+                    first_element = sentence_words[result][:stem_length]
+                    second_element=sentence_words[result][stem_length:]
+                    updated_sentence=""
+                    # Check if the words from both columns are in the sentence
+
+                    if csv_column_word_1 == sentence_words[result] and csv_column_word_2 == sentence_words[index]:
+                        # print("first")
+                        updated_sentence = sentence.replace(csv_column_word_1, replacement_word)
+                        return updated_sentence
+                    elif csv_column_word_1 == sentence_words[result] and csv_column_word_2 == first_element:
+                        #
+                        # print(f"replacement_word- {replacement_word}")
+                        # print(f"second_element- {second_element}")
+                        new_replacement_word=replacement_word+second_element
+                        # print(f"new_replacement_word- {new_replacement_word}")
+
+                        updated_sentence = sentence.replace(sentence_words[result], replacement_word)
+                        # print(f"sentence- {sentence}")
+                        # print(f"updated_sentence- {updated_sentence}")
+                        return updated_sentence
+                return sentence
+
+        # Example usage
+        csv_file_path = 'tamil_wsd_verbs.csv'
+
+        # Provide 3rd pipelines last update sentence result
+        # search_sentence = 'கல்லூரி காலைவிழாவில் செதுக்குதல் நான் கல்லு நடனம் ஆடினேன்'
+
+        search_sentence_verbNew=update_sentence_non
+        verbindex=search_noun_index(csv_file_path, search_sentence_verbNew)
+
+        print(verbindex)
+        pos_tags =tokenize_document_and_return_POS_TAG(search_sentence_verbNew)
+        update_sentence_pip=search_sentence_verbNew
+        i=1
+        for element in verbindex:
+            print(f"{i}- iteration")
+            update_sentence_pip=find_replace_verb(csv_file_path, update_sentence_pip,element)
+            print(f"previous sentence {search_sentence_verbNew}")
+            print(f"final sentence {update_sentence_pip}")
+            i=i+1
+
+        print(f"final sentence {update_sentence_pip}")
+
+
+
+        """## 5th Pipeline for the Work (Grammer Checking)"""
+
+
+
+        import csv
+        import pandas as pd
+        import logging
+        import stanza
+        logging.getLogger('stanza').setLevel(logging.ERROR)
+        import snowballstemmer
+
+        import re
+
+        input_text = update_sentence_pip
+
+        # Split the input_text into sentences
+        sentences = re.split(r'[.!?]', input_text)
+
+        # Remove empty strings from the list of sentences
+        sentences = [sentence.strip() for sentence in sentences if sentence.strip()]
+
+        # Extract the last word from each sentence and store them in an array
+        last_words = [sentence.split()[-1] for sentence in sentences]
+
+        # Print the result
+        print(last_words)
+
+        individual_letters = []
+
+        # Iterate through each word in last_words
+        for word in last_words:
+            # Iterate through each character in the word
+            for letter in word:
+                # Append the letter to individual_letters list
+                individual_letters.append(letter)
+
+        # Print the individual letters
+        print(individual_letters)
+        last_element = individual_letters[-1]
+
+        # Convert last_element to a string
+        last_element_str = str(last_element)
+
+        # Print the last element as a string
+        print(last_element_str)
+
+        def extract_tamil_stems(last_words):
+            stemmed_word_array = []
+            for word in last_words:
+                if len(word) >= 3:
+                    remaining_part = word[:-3]
+                else:
+                    remaining_part = ""
+                stemmed_word_array.append(remaining_part)
+            return stemmed_word_array
+
+
+        stemmed_word = extract_tamil_stems(last_words)
+
+        print("\nStemmed Array:")
+        print(stemmed_word)
+
+        # print("Last Two Letters Array:")
+        # print(last_two_letters)
+
+        # input_text = "நான் நண்பனை கண்டேன். நான் கதைத்துக்கொண்டு இருந்தோம். நான் சேர்ந்து சென்றோம் "
+
+        def replace_last_letter_firstSin(stemmed_word):
+            replaced_parts = [
+                part[:-1] + 'டேன்' if isinstance(part, str) and part.endswith('ட') else
+                part[:-1] + 'றேன்' if isinstance(part, str) and part.endswith('ற') else
+                part[:-1] + 'பேன்' if isinstance(part, str) and part.endswith('ப') else
+                part[:-1] + 'தேன்' if isinstance(part, str) and part.endswith('த') else
+                part[:-1] + 'வேன்' if isinstance(part, str) and part.endswith('வ') else
+                part[:-1] + 'னேன்' if isinstance(part, str) and part.endswith('ன') else
+                part for part in stemmed_word
+            ]
+
+            return replaced_parts
+
+        def replace_last_letter_firstPlu(stemmed_word):
+            replaced_parts = [
+                part[:-1] + 'னோம்' if isinstance(part, str) and part.endswith('ன') else
+                part[:-1] + 'தோம்' if isinstance(part, str) and part.endswith('த') else
+                part[:-1] + 'றோம்' if isinstance(part, str) and part.endswith('ற') else
+                part[:-1] + 'போம்' if isinstance(part, str) and part.endswith('ப') else
+                part[:-1] + 'வோம்' if isinstance(part, str) and part.endswith('வ') else
+                part[:-1] + 'டோம்' if isinstance(part, str) and part.endswith('ட') else
+                part for part in stemmed_word
+            ]
+
+            return replaced_parts
+
+        def replace_last_letter_secondsin(stemmed_word):
+            replaced_parts = [
+                part[:-1] + 'றாய்' if isinstance(part, str) and part.endswith('ற') else
+                part[:-1] + 'தாய்' if isinstance(part, str) and part.endswith('த') else
+                part[:-1] + 'வாய்' if isinstance(part, str) and part.endswith('வ') else
+                part[:-1] + 'டாய்' if isinstance(part, str) and part.endswith('ட') else
+                part[:-1] + 'பாய்' if isinstance(part, str) and part.endswith('ப') else
+                part[:-1] + 'னாய்' if isinstance(part, str) and part.endswith('ன') else
+                part for part in stemmed_word
+            ]
+
+            return replaced_parts
+
+        def replace_last_letter_secondplu(stemmed_word):
+            replaced_parts = [
+                part[:-1] + 'தீர்கள்' if isinstance(part, str) and part.endswith('த') else
+                part[:-1] + 'றீர்கள்' if isinstance(part, str) and part.endswith('ற') else
+                part[:-1] + 'பீர்கள்' if isinstance(part, str) and part.endswith('ப') else
+                part[:-1] + 'வீர்கள்' if isinstance(part, str) and part.endswith('வ') else
+                part[:-1] + 'டீர்கள்' if isinstance(part, str) and part.endswith('ட') else
+                part[:-1] + 'னீர்கள்' if isinstance(part, str) and part.endswith('ன') else
+                part for part in stemmed_word
+            ]
+
+            return replaced_parts
+
+        def replace_last_letter_male(stemmed_word):
+            replaced_parts = [
+                part[:-1] + 'றான்' if isinstance(part, str) and part.endswith('ற') else
+                part[:-1] + 'தான்' if isinstance(part, str) and part.endswith('த') else
+                part[:-1] + 'னான்' if isinstance(part, str) and part.endswith('ன') else
+                part[:-1] + 'பான்' if isinstance(part, str) and part.endswith('ப') else
+                part[:-1] + 'வான்' if isinstance(part, str) and part.endswith('வ') else
+                part[:-1] + 'டான்' if isinstance(part, str) and part.endswith('ட') else
+                part for part in stemmed_word
+            ]
+
+            return replaced_parts
+
+        def replace_last_letter_female(stemmed_word):
+            replaced_parts = [
+                part[:-1] + 'றாள்' if isinstance(part, str) and part.endswith('ற') else
+                part[:-1] + 'தாள்' if isinstance(part, str) and part.endswith('த') else
+                part[:-1] + 'னாள்' if isinstance(part, str) and part.endswith('ன') else
+                part[:-1] + 'பாள்' if isinstance(part, str) and part.endswith('ப') else
+                part[:-1] + 'வாள்' if isinstance(part, str) and part.endswith('வ') else
+                part[:-1] + 'டாள்' if isinstance(part, str) and part.endswith('ட') else
+                part for part in stemmed_word
+            ]
+
+            return replaced_parts
+
+        def replace_last_letter_themSing(stemmed_word):
+            replaced_parts = [
+                part[:-1] + 'தார்' if isinstance(part, str) and part.endswith('த') else
+                part[:-1] + 'றார்' if isinstance(part, str) and part.endswith('ற') else
+                part[:-1] + 'னார்' if isinstance(part, str) and part.endswith('ன') else
+                part[:-1] + 'பார்' if isinstance(part, str) and part.endswith('ப') else
+                part[:-1] + 'வார்' if isinstance(part, str) and part.endswith('வ') else
+                part[:-1] + 'டார்' if isinstance(part, str) and part.endswith('ட') else
+                part for part in stemmed_word
+            ]
+            return replaced_parts
+
+        def replace_last_letter_themPlu(stemmed_word):
+            replaced_parts = [
+                part[:-1] + 'தார்கள்' if isinstance(part, str) and part.endswith('த') else
+                part[:-1] + 'றார்கள்' if isinstance(part, str) and part.endswith('ற') else
+                part[:-1] + 'னார்கள்' if isinstance(part, str) and part.endswith('ன') else
+                part[:-1] + 'பார்கள்' if isinstance(part, str) and part.endswith('ப') else
+                part[:-1] + 'வார்கள்' if isinstance(part, str) and part.endswith('வ') else
+                part[:-1] + 'டார்கள்' if isinstance(part, str) and part.endswith('ட') else
+                part for part in stemmed_word
+            ]
+            return replaced_parts
+
+        def modify_sentence(input_text, stemmed_words):
+            sentences = input_text.split('.')
+            modified_sentences = []
+            for i, sentence in enumerate(sentences):
+                words = sentence.strip().split()
+                if words:
+                    # Process based on the first word of each sentence, applying grammatical rules
+                    if words[0] == 'நான்':
+                        updated_word = replace_last_letter_firstSin([stemmed_words[i]])[0]
+                    elif words[0] in ['நாம்', 'நாங்கள்']:
+                        updated_word = replace_last_letter_firstPlu([stemmed_words[i]])[0]
+                    elif words[0] == 'நீ':
+                        updated_word = replace_last_letter_secondsin([stemmed_words[i]])[0]
+                    elif words[0] == 'நீங்கள்':
+                        updated_word = replace_last_letter_secondplu([stemmed_words[i]])[0]
+                    elif words[0] == 'அவன்':
+                        updated_word = replace_last_letter_male([stemmed_words[i]])[0]
+                    elif words[0] == 'அவள்':
+                        updated_word = replace_last_letter_female([stemmed_words[i]])[0]
+                    elif words[0] == "அவர்":
+                        updated_word = replace_last_letter_themSing([stemmed_words[i]])[0]
+                    elif words[0] == "அவர்கள்":
+                        updated_word = replace_last_letter_themPlu([stemmed_words[i]])[0]
+                    else:
+                        updated_word = words[-1]  # No change if no rule applies
+
+                    words[-1] = updated_word  # Replace the last word with its updated form
+                modified_sentences.append(' '.join(words))
+            # Join the modified sentences to form the final text
+            modified_text = '.'.join(modified_sentences)
+            return modified_text
+
+        # Example usage
+        stemmed_words = extract_tamil_stems(last_words)
+
+        if last_element_str == 'ா':
+            modified_text_before = modify_sentence(input_text, stemmed_words)
+            print(modified_text_before)
+            modified_individual_letters = []
+
+            # Split modified_text_before into words
+            words_in_modified_text = modified_text_before.split()
+            print(words_in_modified_text)
+
+            # Get the last word
+            last_word = words_in_modified_text[-1]
+            print(last_word)
+
+            # Remove the last letter of the last word
+            modified_last_word = last_word[:-1]
+
+            # Iterate through each character in the modified last word
+            for letter in modified_last_word:
+                # Append the letter to modified_individual_letters list
+                modified_individual_letters.append(letter)
+
+            # Join the last_element_str to modified_individual_letters
+            modified_individual_letters.append(last_element_str)
+
+            # Print the individual letters
+            print(modified_individual_letters)
+
+            # Join modified_individual_letters into a single word
+            modified_word = ''.join(modified_individual_letters)
+
+            # Replace the last word in words_in_modified_text with modified_word
+            words_in_modified_text[-1] = modified_word
+
+            # Reconstruct modified_text by joining words_in_modified_text
+            modified_text = ' '.join(words_in_modified_text)
+            modified_text += '?'
+        else:
+            modified_text = modify_sentence(input_text, stemmed_words)
+
+        print("Input Text:")
+        print(input_text)
+
+        print("Modified Text:")
+        print(modified_text)
+        
+                    # Generate a response
+        response = {'message': f'{modified_text}'}
+
+        # Return the response as JSON
+        return jsonify(response)
+    
+    
         
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
